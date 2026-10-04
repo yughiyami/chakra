@@ -1,0 +1,65 @@
+import { describe, it, expect } from 'vitest'
+import { parseModelCard, summarizeModelCard } from './modelCard.js'
+
+const RAW = `{
+  "size_mb": 6.1,
+  "classes": ["healthy","leaf_miner","rust","brown_leaf_spot","cercospora"],
+  "gates": {"temperature": 3.3, "qhat": 0.91, "energy_threshold": -4.2, "alpha": 0.1, "n_calib": 201},
+  "metrics": {
+    "fp32": {"gates": {"temperature": 3.3, "qhat": 0.91, "energy_threshold": -4.2, "alpha": 0.1, "n_calib": 201},
+             "size_mb": 6.1,
+             "test": {"n": 203, "top1_acc": 0.5369, "conformal_coverage": 0.8916, "answer_rate": 0.0788, "selective_acc": 0.875},
+             "saposoa": {"n": 300, "top1_acc": 0.4, "answer_rate": 0.05, "selective_acc": 0.7, "ojo_de_gallo": {"n": 60, "abstention_rate": 0.95}},
+             "far_ood": {"n": 80, "rejection_rate": 0.5}},
+    "int8": {"gates": {"temperature": 36.2, "qhat": 0.8, "energy_threshold": -57, "alpha": 0.1, "n_calib": 201},
+             "size_mb": 1.85,
+             "test": {"n": 203, "top1_acc": 0.14, "selective_acc": NaN}}
+  },
+  "chosen": "fp32",
+  "not_covered": ["ojo de gallo"]
+}`
+
+describe('parseModelCard', () => {
+  it('tolerates bare NaN / Infinity tokens emitted by Python json.dump', () => {
+    const card = parseModelCard(RAW)
+    expect(card.metrics.int8.test.selective_acc).toBeNull()
+    expect(card.chosen).toBe('fp32')
+  })
+
+  it('does not corrupt strings containing NaN', () => {
+    const card = parseModelCard('{"model": "NaN-free name with NaN inside", "x": NaN}')
+    expect(card.model).toBe('NaN-free name with NaN inside')
+    expect(card.x).toBeNull()
+  })
+
+  it('returns null for unparseable input', () => {
+    expect(parseModelCard('not json')).toBeNull()
+    expect(parseModelCard('')).toBeNull()
+  })
+})
+
+describe('summarizeModelCard', () => {
+  it('uses the chosen variant gates and test metrics', () => {
+    const s = summarizeModelCard(parseModelCard(RAW))
+    expect(s.chosen).toBe('fp32')
+    expect(s.gates.temperature).toBe(3.3)
+    expect(s.selectiveAcc).toBe(0.875)
+    expect(s.coverageTarget).toBeCloseTo(0.9)
+    expect(s.answerRate).toBe(0.0788)
+    expect(s.sizeMb).toBe(6.1)
+    expect(s.saposoa.ojoDeGalloAbstention).toBe(0.95)
+    expect(s.farOodRejection).toBe(0.5)
+    expect(s.classes).toHaveLength(5)
+  })
+
+  it('falls back to top-level gates when the chosen variant is missing', () => {
+    const card = parseModelCard(RAW)
+    delete card.chosen
+    const s = summarizeModelCard(card)
+    expect(s.gates.temperature).toBe(3.3)
+  })
+
+  it('returns null for missing card', () => {
+    expect(summarizeModelCard(null)).toBeNull()
+  })
+})
