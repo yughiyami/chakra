@@ -1,0 +1,113 @@
+{
+  "version": "3.0.0",
+  "model": "mobilenetv3_small_100 (timm, ImageNet init) fine-tuned on BRACOL leaf + local Saposoa (Peru) leaves (1/3 of each local class)",
+  "format": "ONNX opset 17, fp32",
+  "size_mb": 6.1,
+  "input": "image: float32 RGB [0,1] NCHW 1x3x224x224, squash-resized whole photo; normalization in-graph",
+  "outputs": {
+    "logits": "[1,6]",
+    "features": "[1,1024] penultimate, used by the Mahalanobis gate (ood.json)"
+  },
+  "classes": [
+    "healthy",
+    "leaf_miner",
+    "rust",
+    "brown_leaf_spot",
+    "cercospora",
+    "ojo_de_gallo"
+  ],
+  "gates": {
+    "temperature": 0.6355826258659363,
+    "alpha": 0.1,
+    "n_calib": 255,
+    "id_recall": 0.95,
+    "qhat": 0.5941782593727112,
+    "energy_threshold": -1.3479609489440918,
+    "mahalanobis_threshold": 45.185550689697266
+  },
+  "decision_rule": "abstain if energy > energy_threshold OR mahalanobis > mahalanobis_threshold OR conformal set size != 1",
+  "metrics": {
+    "bracol_test": {
+      "set": "bracol_test",
+      "n": 203,
+      "top1_acc": 0.8818,
+      "conformal_coverage": 0.8966,
+      "answer_rate": 0.9015,
+      "selective_acc": 0.9016,
+      "avg_set_size": 1.034,
+      "ece": 0.036
+    },
+    "saposoa_test": {
+      "set": "saposoa_peru_test",
+      "n": 164,
+      "top1_acc": 0.9756,
+      "conformal_coverage": 0.9756,
+      "answer_rate": 0.7866,
+      "selective_acc": 0.969,
+      "avg_set_size": 1.012,
+      "ece": 0.0274
+    },
+    "coleaf_deficiency_unseen": {
+      "set": "coleaf_deficiency_unseen",
+      "n": 120,
+      "abstention_rate": 0.7917,
+      "wrongly_answered_as": {
+        "healthy": 15,
+        "rust": 10
+      },
+      "auroc_vs_local_id": {
+        "max_softmax": 0.7573,
+        "energy": 0.5647,
+        "mahalanobis": 0.8992
+      }
+    },
+    "far_ood": {
+      "n": 80,
+      "rejection_rate": 1.0
+    },
+    "onnx_parity_max_logit_diff": 1.1e-05
+  },
+  "split_sizes": {
+    "bracol": {
+      "train": 803,
+      "val": 135,
+      "calib": 201,
+      "test": 203
+    },
+    "saposoa": {
+      "train": 108,
+      "calib": 54,
+      "test": 164,
+      "ood": 120
+    },
+    "local_oversample": 3
+  },
+  "training": {
+    "epochs": 15,
+    "best_val_acc": 0.8593,
+    "seconds": 484,
+    "device": "CPU"
+  },
+  "quantization": "Static int8 QDQ (full and conv-only) evaluated in v1: top-1 fell to 34%/30% on BRACOL test, so fp32 ships.",
+  "data": {
+    "train": "BRACOL leaf (Esgario, Krohling & Ventura 2020; Mendeley yy2k5y8mxg v1, CC BY 4.0). 1,401 of 1,747 images recovered from a truncated archive; class 5 excluded.",
+    "local": "Saposoa, San Martin, Peru (Santa-Maria & Rodriguez 2026; Mendeley mfpxg4y65r v1, CC BY 4.0). healthy 60 / rust 145 / ojo de gallo 121 images, SHA-256 verified at download: 1/3 train / 1/6 calib / rest test per class.",
+    "unseen": "CoLeaf-DB (Jaen, Cajamarca, Peru; Mendeley brfgw46wzb v1, CC BY 4.0): iron and nitrogen deficiency leaves, used ONLY to test abstention."
+  },
+  "not_covered": [
+    "ojo de gallo is learned from only 40 local leaves (Saposoa, one site); treat as provisional",
+    "nutrient deficiencies (N, Fe, K, ...) - never trained; model should abstain",
+    "coffee berry borer (broca) and any berry/stem/root symptom",
+    "upper leaf surface (BRACOL photographs the underside)",
+    "leaves photographed on the plant against cluttered backgrounds",
+    "Peruvian leaf miner, phoma and cercospora (learned only from Brazilian BRACOL photos)",
+    "multiple simultaneous stresses",
+    "night/flash photos, very low-end cameras"
+  ],
+  "citations": [
+    "Liu et al. 2020 Energy-based OOD detection, NeurIPS",
+    "Lee et al. 2018 Mahalanobis OOD, NeurIPS",
+    "Angelopoulos & Bates 2021 arXiv:2107.07511",
+    "Guo et al. 2017 On calibration, ICML"
+  ]
+}
