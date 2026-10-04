@@ -14,7 +14,7 @@ Chakra informs; the person decides. Every result shows its source and date, and 
 
 | Screen | What the farmer gets | How |
 |---|---|---|
-| **Hoja** (leaf) | Photo of the leaf underside → healthy / rust / leaf miner / Phoma / Cercospora, or an explicit abstention | Photo-quality gate → MobileNetV3-Small ONNX on device → temperature scaling + energy + Mahalanobis OOD + split-conformal set. Answers only when the set is a single class. |
+| **Hoja** (leaf) | Photo of the leaf underside → healthy / rust / leaf miner / Phoma / Cercospora / ojo de gallo, or an explicit abstention | Photo-quality gate → MobileNetV3-Small ONNX on device → temperature scaling + energy + Mahalanobis OOD + split-conformal set. Answers only when the set is a single class. |
 | **Clima** (weather) | Rust weather risk, days until lesions appear, narrow day/night range warning, borer degree-days and projected date | Open-Meteo history + 16-day forecast, altitude lapse-rate correction, published agronomic rules |
 | **Precio** (price) | Is this offer below, inside or above a reference band for parchment coffee (S/ per kg and per 46 kg quintal)? | World Bank Pink Sheet Arabica × FX × observed Peru pass-through (FAOSTAT) |
 | **Tarjeta** (card) | A ≤160-character ASCII code with all results for WhatsApp/SMS, plus a local outbox | Store-and-forward; nothing is sent automatically |
@@ -24,7 +24,9 @@ UI copy is in simple Spanish (default) with a **Quechua Chanka (quy) toggle**. T
 
 ## Localized AI
 
-The base model is trained on BRACOL (Brazil). We then use **40 Peruvian leaves from Saposoa, San Martín** to adapt it, and test it on other Peruvian leaves it never saw. The Hoja screen states accuracy measured on those Peruvian leaves ("acierto ~X% en hojas de Perú", with the sample size), and shows BRACOL test metrics separately in Acerca. For Chakra, localizing AI means a model from another country is not enough.
+The base model is trained on BRACOL (Brazil). We then use **40 Peruvian leaves from Saposoa, San Martín** to adapt it, and test it on other Peruvian leaves it never saw. The Hoja screen states accuracy measured on those Peruvian leaves ("acierto ~X% en hojas de Perú", with the sample size), and shows BRACOL test metrics separately in Acerca. The same 40 local leaves taught the model **ojo de gallo** (*Mycena citricolor*), a disease common in Peru that is absent from the Brazilian data; that class is shown as provisional ("aprendido con 40 hojas de Saposoa, San Martín: resultado provisional"). Nutrient-deficiency leaves from Jaén (CoLeaf-DB) are kept as a never-seen test to measure abstention. For Chakra, localizing AI means a model from another country is not enough.
+
+The class list is read from `model_card.json` (never hard-coded), so the app follows the model contract as it evolves.
 
 ## Architecture
 
@@ -80,13 +82,14 @@ If `ood.json` is missing, the Mahalanobis gate is skipped and Acerca says so.
 | Data | Use | License |
 |---|---|---|
 | BRACOL leaf images (Esgario et al. 2020) | Training / test | CC BY 4.0 |
+| CoLeaf-DB nutrient-deficiency leaves, Jaén, Peru | Never-seen abstention test only | See dataset terms |
 | Saposoa leaves, San Martín, Peru (Santa-María & Rodríguez 2026) | Local adaptation + Peru test | CC BY 4.0 |
 | Open-Meteo (ERA5 archive + forecast) | Weather rules; snapshots in `public/data/weather/` | CC BY 4.0 |
 | World Bank Commodity Prices (Pink Sheet) | Arabica USD/kg | CC BY 4.0 |
 | FAOSTAT Producer Prices, Peru | Farmgate pass-through band (0.51–0.58) | CC BY 4.0 |
 | open.er-api.com | Optional live USD→PEN | Free with attribution |
 
-**Not covered:** ojo de gallo (*Mycena citricolor*), coffee berry borer damage and any berry/stem/root symptom, the upper leaf surface, leaves on the plant against cluttered backgrounds, nutrient deficiencies and multiple stresses, night/flash photos, product doses, exact prices, yield forecasts.
+**Not covered:** nutrient deficiencies (N, Fe, K…), coffee berry borer damage and any berry/stem/root symptom, the upper leaf surface, leaves on the plant against cluttered backgrounds, multiple simultaneous stresses, night/flash photos, product doses, exact prices, yield forecasts.
 
 ## Guardrails
 
@@ -115,4 +118,4 @@ npm run icons              # regenerate PWA icons (sharp)
 
 ## Credits and references
 
-Esgario, Krohling & Ventura 2020 (BRACOL); Santa-María & Rodríguez 2026 (Saposoa dataset); Motisi et al. 2022; Moraes et al. 1976 / Alfonsi et al. 2019; Avelino et al. 2015; Jaramillo et al. 2009; Hamilton et al. 2019; Sentelhas et al. 2008; Liu et al. 2020 (energy OOD); Lee et al. 2018 (Mahalanobis OOD); Angelopoulos & Bates 2021 (conformal prediction); Guo et al. 2017 (temperature scaling). Weather by Open-Meteo. Prices by the World Bank and FAOSTAT. Icons by Lucide. Fonts: Atkinson Hyperlegible (Braille Institute) and Fraunces.
+Esgario, Krohling & Ventura 2020 (BRACOL); Santa-María & Rodríguez 2026 (Saposoa dataset); CoLeaf-DB; Avelino et al. 2007 (ojo de gallo); Motisi et al. 2022; Moraes et al. 1976 / Alfonsi et al. 2019; Avelino et al. 2015; Jaramillo et al. 2009; Hamilton et al. 2019; Sentelhas et al. 2008; Liu et al. 2020 (energy OOD); Lee et al. 2018 (Mahalanobis OOD); Angelopoulos & Bates 2021 (conformal prediction); Guo et al. 2017 (temperature scaling). Weather by Open-Meteo. Prices by the World Bank and FAOSTAT. Icons by Lucide. Fonts: Atkinson Hyperlegible (Braille Institute) and Fraunces.

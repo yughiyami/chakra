@@ -37,7 +37,7 @@ function Result({ result, info }) {
     const label = result.label
     const advice = t(`hoja.advice.${label}`)
     const adviceEs = tEs(`hoja.advice.${label}`)
-    const speech = [tEs('hoja.seemsTo'), tEs(`hoja.classes.${label}`), ...adviceEs, tEs('app.confirmTech')].join(' ')
+    const speech = [tEs('hoja.seemsTo'), tEs(`hoja.classes.${label}`), ...adviceEs, label === 'ojo_de_gallo' ? tEs('hoja.provisional') : '', tEs('app.confirmTech')].join(' ')
     return (
       <div className="result reveal">
         <p className="result-kicker-free">{t('hoja.seemsTo')}</p>
@@ -48,8 +48,10 @@ function Result({ result, info }) {
           {advice.map((a) => <li key={a}>{a}</li>)}
         </ul>
         <p className="confirm"><UserRound aria-hidden="true" size={22} /> {t('app.confirmTech')}</p>
+        {label === 'ojo_de_gallo' && <p className="banner banner-demo">{t('hoja.provisional')}</p>}
         <SpeakButton text={speech} />
         <Source>{t('hoja.adviceSources')}</Source>
+        {label === 'ojo_de_gallo' && <Source>{t('hoja.ojoSource')}</Source>}
       </div>
     )
   }

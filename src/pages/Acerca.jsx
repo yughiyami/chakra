@@ -27,6 +27,8 @@ function ModelFacts({ info }) {
   if (s.top1 != null) facts.push(t('acerca.bracolTest', { n: s.testN ?? '—', top1: pct(s.top1), answer: pct(s.answerRate), acc: pct(s.selectiveAcc) }))
   if (s.coverageTarget != null) facts.push(t('acerca.coverage', { cov: pct(s.conformalCoverage ?? s.coverageTarget) }))
   if (s.ojoDeGalloAbstention != null) facts.push(t('acerca.ojo', { rate: pct(s.ojoDeGalloAbstention) }))
+  if (s.deficiency?.abstentionRate != null) facts.push(t('acerca.deficiency', { rate: pct(s.deficiency.abstentionRate) }))
+  if (s.classes?.includes('ojo_de_gallo')) facts.push(t('acerca.ojoProvisional'))
   if (s.farOodRejection != null) facts.push(t('acerca.farOod', { rate: pct(s.farOodRejection) }))
   const oodReady = info.ood && Number.isFinite(s.gates?.mahalanobis_threshold)
   facts.push(oodReady ? t('acerca.oodOn') : t('acerca.oodOff'))

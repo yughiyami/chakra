@@ -4,6 +4,7 @@ export const CITATIONS = [
   'Santa-María & Rodríguez (2026). Coffee leaf images from Saposoa, San Martín, Peru. Mendeley Data mfpxg4y65r, CC BY 4.0.',
   'Motisi et al. (2022). Monthly rust classes (ExpeRoya). Agricultural Systems.',
   'Moraes et al. (1976), as reported in Alfonsi et al. (2019). Coffee rust incubation period models. Pesquisa Agropecuária Brasileira.',
+  'Avelino et al. (2007). Topography and crop management are key factors for the development of American leaf spot epidemics on coffee in Costa Rica. Phytopathology 97:1532–1542.',
   'Avelino et al. (2015). The coffee rust crises in Colombia and Central America (2008–2013). Food Security 7.',
   'Jaramillo et al. (2009). Thermal tolerance of the coffee berry borer Hypothenemus hampei. PLoS ONE 4(8).',
   'Hamilton et al. (2019). Coffee berry borer degree-day model and field validation. PLoS ONE.',
@@ -17,6 +18,7 @@ export const CITATIONS = [
 export const DATASETS = [
   { name: 'BRACOL (coffee leaf, Brazil)', use: 'Model training / test', license: 'CC BY 4.0' },
   { name: 'Saposoa leaves (San Martín, Peru)', use: 'Local adaptation + Peru test', license: 'CC BY 4.0' },
+  { name: 'CoLeaf-DB (nutrient-deficiency leaves, Jaén, Peru)', use: 'Never-seen abstention test', license: 'See dataset terms' },
   { name: 'Open-Meteo (ERA5 archive + forecast)', use: 'Weather rules', license: 'CC BY 4.0' },
   { name: 'World Bank Commodity Prices (Pink Sheet)', use: 'International Arabica price', license: 'CC BY 4.0' },
   { name: 'FAOSTAT Producer Prices (Peru)', use: 'Farmgate pass-through band', license: 'CC BY 4.0' },

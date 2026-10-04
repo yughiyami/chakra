@@ -65,12 +65,11 @@ export default {
     neverSeenTitle: 'Kaykunataqa manam riqsinichu',
     neverSeenIntro: 'Modeloqa manam haykaqpas kaykunata rikurqanchu. Sichum kaykunamanta yuyanki, técnicota tapuy.',
     neverSeen: [
-      'Ojo de gallo (Mycena citricolor)',
+      'Mikuy pisiy (N, Fe, K…)',
       'Broca (ruru unquy)',
       'Ruru, kurku, sapi',
       'Rapip hawa ladon',
       'Mallkipi rapi, chaqrusqa qipapi',
-      'Mikuy pisiy (deficiencia)',
       'Tuta utaq flashwan foto',
     ],
     photoPrivate: 'Fotoqa manam celularniykimanta lluqsinchu.',
@@ -80,6 +79,7 @@ export default {
       rust: 'Roya unquy',
       brown_leaf_spot: 'Phoma mancha',
       cercospora: 'Cercospora mancha',
+      ojo_de_gallo: 'Ojo de gallo (gotera)',
     },
     advice: {
       healthy: [
@@ -115,7 +115,14 @@ export default {
         'Wanuta técnicoykiwan qaway.',
         'Allin llantu yanapan.',
       ],
+      ojo_de_gallo: [
+        'Ojo de gallo unquyman rikchakun (Mycena citricolor).',
+        '1100–1550 m hanaqpi, chiri huqu pachapi, achka llantupi, rapi ismusqa kaptin rikurin.',
+        'Llantuta allichay, wayra mallkikuna chawpinta yaykuchun.',
+        'Técnicoykiman willay. Kaypiqa manam dosista qunchikchu.',
+      ],
     },
+    provisional: 'Saposoa (San Martín) 40 rapillawan yachasqa: manaraq seguro.',
   },
   clima: {
     title: 'Pacha hinaspa roya',
@@ -212,7 +219,7 @@ export default {
     what: 'Chakraqa kafe rapikunata, pachamanta roya broca unquyta, chanin allin kasqantapas qawanmi. Mana internetwanpas llamkanmi.',
     human: 'Chakram willan, qammi akllanki. Técnicowan utaq cooperativaykiwan tapukuy.',
     localTitle: 'Perúpaq IA',
-    local: 'Saposoa (San Martín, Perú) llaqtamanta 40 rapikunawan modelota yachachirqayku, rapinchikkunaman tupananpaq. Chaymi "IA-ta llaqtanchikman tupachiy".',
+    local: 'Saposoa (San Martín, Perú) llaqtamanta 40 rapikunawan modelota yachachirqayku, rapinchikkunaman tupananpaq. Chaymi "IA-ta llaqtanchikman tupachiy". Chaymi Chakra ojo de gallo unquytapas riqsiyta yacharqa.',
     modelTitle: 'Modelo',
     notCoveredTitle: 'Chakraqa kaykunata MANAM qawanchu',
     privacyTitle: 'Pakasqa kay',

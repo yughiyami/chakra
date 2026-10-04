@@ -116,6 +116,6 @@ export async function classify(rgba) {
   const logits = Array.from(out.logits?.data ?? [])
   const features = out.features?.data ?? null
   const maha = features && ood ? mahalanobisScore(features, ood) : null
-  const decision = decide(logits, summary?.gates, summary?.classes ?? undefined, { mahalanobis: maha })
+  const decision = decide(logits, summary?.gates, summary?.classes ?? null, { mahalanobis: maha })
   return { ...decision, logits }
 }
