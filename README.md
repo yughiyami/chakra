@@ -82,7 +82,7 @@ If `ood.json` is missing, the Mahalanobis gate is skipped and Acerca says so.
 | Data | Use | License |
 |---|---|---|
 | BRACOL leaf images (Esgario et al. 2020) | Training / test | CC BY 4.0 |
-| CoLeaf-DB nutrient-deficiency leaves, Jaén, Peru | Never-seen abstention test only | See dataset terms |
+| CoLeaf-DB nutrient-deficiency leaves, Jaén, Peru | Never-seen abstention test only | CC BY 4.0 |
 | Saposoa leaves, San Martín, Peru (Santa-María & Rodríguez 2026) | Local adaptation + Peru test | CC BY 4.0 |
 | Open-Meteo (ERA5 archive + forecast) | Weather rules; snapshots in `public/data/weather/` | CC BY 4.0 |
 | World Bank Commodity Prices (Pink Sheet) | Arabica USD/kg | CC BY 4.0 |

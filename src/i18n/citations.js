@@ -18,7 +18,7 @@ export const CITATIONS = [
 export const DATASETS = [
   { name: 'BRACOL (coffee leaf, Brazil)', use: 'Model training / test', license: 'CC BY 4.0' },
   { name: 'Saposoa leaves (San Martín, Peru)', use: 'Local adaptation + Peru test', license: 'CC BY 4.0' },
-  { name: 'CoLeaf-DB (nutrient-deficiency leaves, Jaén, Peru)', use: 'Never-seen abstention test', license: 'See dataset terms' },
+  { name: 'CoLeaf-DB (nutrient-deficiency leaves, Jaén, Peru)', use: 'Never-seen abstention test', license: 'CC BY 4.0' },
   { name: 'Open-Meteo (ERA5 archive + forecast)', use: 'Weather rules', license: 'CC BY 4.0' },
   { name: 'World Bank Commodity Prices (Pink Sheet)', use: 'International Arabica price', license: 'CC BY 4.0' },
   { name: 'FAOSTAT Producer Prices (Peru)', use: 'Farmgate pass-through band', license: 'CC BY 4.0' },
