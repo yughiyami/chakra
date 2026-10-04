@@ -28,6 +28,10 @@ describe('buildCard', () => {
     expect(c).toContain('H:minador ')
   })
 
+  it('encodes ojo de gallo answers', () => {
+    expect(buildCard({ ...full, leaf: { status: 'answer', label: 'ojo_de_gallo' } })).toContain('H:ojogallo ')
+  })
+
   it('marks unfamiliar leaves and unknown modules with ?', () => {
     const c = buildCard({ date: '2026-10-04', farm: null, leaf: { status: 'abstain', reason: 'unfamiliar' }, weather: { status: 'stale' }, price: { status: 'unknown' } })
     expect(c).toBe('CHAKRA1 2026-10-04 F:? H:? (abst) R:? P:?')

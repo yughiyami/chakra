@@ -36,13 +36,15 @@ const num = (v) => (Number.isFinite(v) ? v : null)
 /**
  * Flatten the fields the UI and decision gates need. Supports:
  *  v1: metrics[chosen] = {gates, size_mb, test, saposoa, far_ood}
- *  v2: metrics = {bracol_test, saposoa_test, ojo_de_gallo_unseen, far_ood, onnx_parity_max_logit_diff}
+ *  v2/v3: metrics = {bracol_test, saposoa_test, ojo_de_gallo_unseen (v2) | coleaf_deficiency_unseen (v3),
+ *         far_ood, onnx_parity_max_logit_diff}
  */
 export function summarizeModelCard(card) {
   if (!card || typeof card !== 'object') return null
   const m = card.metrics ?? {}
   const isV2 = 'bracol_test' in m || 'saposoa_test' in m
   let gates, test, sap, ogg, farOod, sizeMb, chosen
+  const def = m.coleaf_deficiency_unseen ?? null
   if (isV2) {
     gates = card.gates ?? null
     test = m.bracol_test ?? {}
@@ -95,6 +97,7 @@ export function summarizeModelCard(card) {
     saposoa,
     ojoDeGallo,
     ojoDeGalloAbstention: ojoDeGallo?.abstentionRate ?? null,
+    deficiency: def ? { n: num(def.n), abstentionRate: num(def.abstention_rate), auroc: num(def.auroc_vs_local_id) } : null,
     farOodRejection: num(farOod?.rejection_rate),
     farOodN: num(farOod?.n),
     onnxParity: num(m.onnx_parity_max_logit_diff),

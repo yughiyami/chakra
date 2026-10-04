@@ -102,3 +102,25 @@ describe('summarizeModelCard (v2 flat metrics contract)', () => {
     expect(summarizeModelCard(card).headline).toEqual({ acc: 0.95, n: 203, set: 'bracol' })
   })
 })
+
+describe('summarizeModelCard (v3: 6 classes + CoLeaf deficiency never-seen test)', () => {
+  const v3 = {
+    version: '3.0.0',
+    classes: ['healthy', 'leaf_miner', 'rust', 'brown_leaf_spot', 'cercospora', 'ojo_de_gallo'],
+    gates: { temperature: 1, qhat: 0.6, energy_threshold: -1, mahalanobis_threshold: 40, alpha: 0.1 },
+    metrics: {
+      bracol_test: { n: 203, selective_acc: 0.9 },
+      saposoa_test: { n: 80, selective_acc: 0.85 },
+      coleaf_deficiency_unseen: { n: 120, abstention_rate: 0.7, auroc_vs_local_id: 0.88 },
+      far_ood: { rejection_rate: 1 },
+    },
+  }
+  it('exposes the class list and the deficiency abstention metric', () => {
+    const s = summarizeModelCard(v3)
+    expect(s.version).toBe(2)
+    expect(s.classes).toHaveLength(6)
+    expect(s.deficiency).toEqual({ n: 120, abstentionRate: 0.7, auroc: 0.88 })
+    expect(s.ojoDeGallo).toBeNull()
+    expect(s.headline).toEqual({ acc: 0.85, n: 80, set: 'saposoa' })
+  })
+})

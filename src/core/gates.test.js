@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { softmax, logsumexp, energyScore, decide, mahalanobisScore, CLASSES } from './gates.js'
 
 // Fixture gates (NOT the real model's): T=2, qhat=0.9 -> include class if p >= 0.1
+// Legacy 5-class fixture; the real class list always comes from model_card.json.
+const C5 = ['healthy', 'leaf_miner', 'rust', 'brown_leaf_spot', 'cercospora']
 const GATES = { temperature: 2, qhat: 0.9, energy_threshold: -3, alpha: 0.1, n_calib: 100 }
 
 describe('softmax / logsumexp / energy', () => {
@@ -27,7 +29,7 @@ describe('softmax / logsumexp / energy', () => {
 
 describe('decide (mirror of Python gate logic)', () => {
   it('answers when energy is familiar and the conformal set is a singleton', () => {
-    const r = decide([10, 0, 0, 0, 0], GATES)
+    const r = decide([10, 0, 0, 0, 0], GATES, C5)
     expect(r.status).toBe('answer')
     expect(r.label).toBe('healthy')
     expect(r.set).toEqual(['healthy'])
@@ -36,21 +38,21 @@ describe('decide (mirror of Python gate logic)', () => {
   })
 
   it('abstains as unfamiliar when energy exceeds the threshold', () => {
-    const r = decide([-5, -5, -5, -5, -5], GATES)
+    const r = decide([-5, -5, -5, -5, -5], GATES, C5)
     expect(r.status).toBe('abstain')
     expect(r.reason).toBe('unfamiliar')
     expect(r.energy).toBeGreaterThan(GATES.energy_threshold)
   })
 
   it('abstains as ambiguous listing candidates when the set has >1 class', () => {
-    const r = decide([6, 6, 0, 0, 0], GATES)
+    const r = decide([6, 6, 0, 0, 0], GATES, C5)
     expect(r.status).toBe('abstain')
     expect(r.reason).toBe('ambiguous')
     expect(r.set).toEqual(['healthy', 'leaf_miner'])
   })
 
   it('abstains as unfamiliar when the conformal set is empty', () => {
-    const r = decide([1, 1, 1, 0, 0], { ...GATES, qhat: 0.5, energy_threshold: 100 })
+    const r = decide([1, 1, 1, 0, 0], { ...GATES, qhat: 0.5, energy_threshold: 100 }, C5)
     expect(r.status).toBe('abstain')
     expect(r.reason).toBe('unfamiliar')
     expect(r.set).toEqual([])
@@ -58,24 +60,24 @@ describe('decide (mirror of Python gate logic)', () => {
 
   it('uses the inclusive threshold p_k >= 1 - qhat', () => {
     // Two classes with equal logits and qhat=0.5 -> p=0.5 each -> both included
-    const r = decide([0, 0, -1000, -1000, -1000], { ...GATES, temperature: 1, qhat: 0.5, energy_threshold: 100 })
+    const r = decide([0, 0, -1000, -1000, -1000], { ...GATES, temperature: 1, qhat: 0.5, energy_threshold: 100 }, C5)
     expect(r.set).toEqual(['healthy', 'leaf_miner'])
   })
 
   it('abstains with no_model when gates are missing or invalid', () => {
-    expect(decide([10, 0, 0, 0, 0], null).reason).toBe('no_model')
-    expect(decide([10, 0, 0, 0, 0], { temperature: 0, qhat: 0.9, energy_threshold: 0 }).reason).toBe('no_model')
+    expect(decide([10, 0, 0, 0, 0], null, C5).reason).toBe('no_model')
+    expect(decide([10, 0, 0, 0, 0], { temperature: 0, qhat: 0.9, energy_threshold: 0 }, C5).reason).toBe('no_model')
   })
 
   it('abstains with invalid on wrong-length or non-finite logits', () => {
-    expect(decide([1, 2, 3], GATES).reason).toBe('invalid')
-    expect(decide([NaN, 0, 0, 0, 0], GATES).reason).toBe('invalid')
+    expect(decide([1, 2, 3], GATES, C5).reason).toBe('invalid')
+    expect(decide([NaN, 0, 0, 0, 0], GATES, C5).reason).toBe('invalid')
   })
 
   it('accepts custom class names', () => {
     const classes = ['a', 'b', 'c', 'd', 'e']
     expect(decide([0, 10, 0, 0, 0], GATES, classes).label).toBe('b')
-    expect(CLASSES).toEqual(['healthy', 'leaf_miner', 'rust', 'brown_leaf_spot', 'cercospora'])
+    expect(CLASSES).toEqual(['healthy', 'leaf_miner', 'rust', 'brown_leaf_spot', 'cercospora', 'ojo_de_gallo'])
   })
 })
 
@@ -106,7 +108,7 @@ describe('mahalanobis OOD score (v2 contract)', () => {
 
   it('abstains as unfamiliar when mahalanobis exceeds its threshold even if energy passes', () => {
     const gates = { ...GATES, mahalanobis_threshold: 5 }
-    const r = decide([10, 0, 0, 0, 0], gates, CLASSES, { mahalanobis: 10 })
+    const r = decide([10, 0, 0, 0, 0], gates, C5, { mahalanobis: 10 })
     expect(r.status).toBe('abstain')
     expect(r.reason).toBe('unfamiliar')
     expect(r.mahalanobis).toBe(10)
@@ -114,13 +116,35 @@ describe('mahalanobis OOD score (v2 contract)', () => {
 
   it('answers when mahalanobis is under the threshold', () => {
     const gates = { ...GATES, mahalanobis_threshold: 50 }
-    expect(decide([10, 0, 0, 0, 0], gates, CLASSES, { mahalanobis: 10 }).status).toBe('answer')
+    expect(decide([10, 0, 0, 0, 0], gates, C5, { mahalanobis: 10 }).status).toBe('answer')
   })
 
   it('skips the mahalanobis gate when score or threshold is unavailable', () => {
-    expect(decide([10, 0, 0, 0, 0], GATES, CLASSES, { mahalanobis: 1e9 }).status).toBe('answer')
-    const r = decide([10, 0, 0, 0, 0], { ...GATES, mahalanobis_threshold: 5 }, CLASSES, { mahalanobis: null })
+    expect(decide([10, 0, 0, 0, 0], GATES, C5, { mahalanobis: 1e9 }).status).toBe('answer')
+    const r = decide([10, 0, 0, 0, 0], { ...GATES, mahalanobis_threshold: 5 }, C5, { mahalanobis: null })
     expect(r.status).toBe('answer')
     expect(r.oodGate).toBe('skipped')
+  })
+})
+
+describe('v3 contract: class list from the model card, any count', () => {
+  it('answers with 6 classes including ojo_de_gallo', () => {
+    const r = decide([0, 0, 0, 0, 0, 10], GATES, CLASSES)
+    expect(r.status).toBe('answer')
+    expect(r.label).toBe('ojo_de_gallo')
+    expect(r.probs).toHaveLength(6)
+  })
+
+  it('abstains as invalid when logits and class list lengths differ', () => {
+    expect(decide([10, 0, 0, 0, 0], GATES, CLASSES).reason).toBe('invalid')
+  })
+
+  it('abstains with no_model when the class list is missing', () => {
+    expect(decide([10, 0, 0, 0, 0], GATES, null).reason).toBe('no_model')
+  })
+
+  it('computes mahalanobis over any number of class means', () => {
+    const ood = { feat_mean: [0, 0], components: [[1, 0], [0, 1]], class_means: [[5, 5], [9, 9], [1, 1]], precision: [[1, 0], [0, 1]] }
+    expect(mahalanobisScore([1, 2], ood)).toBeCloseTo(1)
   })
 })

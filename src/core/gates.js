@@ -9,7 +9,9 @@
 //   else answer argmax
 // The tool never guesses: every non-singleton outcome is an explicit abstention.
 
-export const CLASSES = ['healthy', 'leaf_miner', 'rust', 'brown_leaf_spot', 'cercospora']
+// v3 class order. The app always passes the list read from model_card.json;
+// this constant is only a documented default.
+export const CLASSES = ['healthy', 'leaf_miner', 'rust', 'brown_leaf_spot', 'cercospora', 'ojo_de_gallo']
 
 export function logsumexp(xs) {
   const m = Math.max(...xs)
@@ -46,7 +48,7 @@ function validGates(g) {
  * @returns {{status:'answer'|'abstain', reason?:string, label?:string, set:string[], probs:number[], energy:number|null, mahalanobis:number|null, oodGate:'passed'|'failed'|'skipped'}}
  */
 export function decide(logits, gates, classes = CLASSES, { mahalanobis = null } = {}) {
-  if (!validGates(gates)) return { status: 'abstain', reason: 'no_model', set: [], probs: [], energy: null }
+  if (!validGates(gates) || !Array.isArray(classes) || classes.length < 2) return { status: 'abstain', reason: 'no_model', set: [], probs: [], energy: null }
   const z = Array.from(logits ?? [])
   if (z.length !== classes.length || z.some((v) => !Number.isFinite(v))) {
     return { status: 'abstain', reason: 'invalid', set: [], probs: [], energy: null }

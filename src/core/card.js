@@ -12,6 +12,7 @@ export const LEAF_CODES = {
   rust: 'roya',
   brown_leaf_spot: 'phoma',
   cercospora: 'cercos',
+  ojo_de_gallo: 'ojogallo',
 }
 const RISK_CODES = { high: 'ALTA', medium: 'MEDIA', low: 'BAJA' }
 const PRICE_SIGN = { below: '<', inside: '=', above: '>' }
@@ -19,7 +20,7 @@ const PRICE_SIGN = { below: '<', inside: '=', above: '>' }
 export function toAscii(s) {
   return String(s ?? '')
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^\x20-\x7E]/g, '')
 }
 
