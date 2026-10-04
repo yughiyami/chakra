@@ -1,69 +1,56 @@
-import { useState } from 'react'
-import { Home, Camera, MessageSquare } from 'lucide-react'
-import Dashboard from './pages/Dashboard'
-import Analyze from './pages/Analyze'
-import Coach from './pages/Coach'
-import './App.css'
+import { useCallback, useEffect, useState } from 'react'
+import { I18nProvider } from './i18n/index.jsx'
+import { AppStateProvider, useApp } from './state/AppState.jsx'
+import { Header, BottomNav, TABS } from './components/Shell.jsx'
+import { useOfflineReady } from './pwa.js'
+import Home from './pages/Home.jsx'
+import Hoja from './pages/Hoja.jsx'
+import Clima from './pages/Clima.jsx'
+import Precio from './pages/Precio.jsx'
+import Tarjeta from './pages/Tarjeta.jsx'
+import Acerca from './pages/Acerca.jsx'
 
-function App() {
-  const [activeTab, setActiveTab] = useState('home')
-  
-  // Mock Gamification State
-  const [userLevel, setUserLevel] = useState(2)
-  const [userProgress, setUserProgress] = useState(65)
-  const [analyzedSpaces, setAnalyzedSpaces] = useState(3)
+const PAGES = { home: Home, hoja: Hoja, clima: Clima, precio: Precio, tarjeta: Tarjeta, acerca: Acerca }
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'home':
-        return <Dashboard level={userLevel} progress={userProgress} spaces={analyzedSpaces} />
-      case 'analyze':
-        return <Analyze onAnalyzeComplete={() => {
-          setAnalyzedSpaces(prev => prev + 1)
-          setUserProgress(prev => Math.min(prev + 15, 100))
-          if (userProgress + 15 >= 100) {
-            setUserLevel(prev => prev + 1)
-            setUserProgress(0)
-          }
-        }} />
-      case 'coach':
-        return <Coach />
-      default:
-        return <Dashboard />
-    }
-  }
+function routeFromHash() {
+  const id = window.location.hash.replace(/^#\/?/, '')
+  return TABS.some((t) => t.id === id) ? id : 'home'
+}
 
+function Shell() {
+  const [route, setRoute] = useState(routeFromHash)
+  const { online } = useApp()
+  const offlineState = useOfflineReady()
+
+  useEffect(() => {
+    const onHash = () => setRoute(routeFromHash())
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+
+  const go = useCallback((id) => {
+    window.location.hash = id === 'home' ? '/' : `/${id}`
+    window.scrollTo(0, 0)
+  }, [])
+
+  const Page = PAGES[route]
   return (
-    <div className="app-container">
-      <div className="content-area">
-        {renderContent()}
-      </div>
-      
-      <nav className="bottom-nav">
-        <button 
-          className={`btn nav-item ${activeTab === 'home' ? 'active' : ''}`}
-          onClick={() => setActiveTab('home')}
-        >
-          <Home size={24} />
-          <span>Inicio</span>
-        </button>
-        <button 
-          className={`btn nav-item ${activeTab === 'analyze' ? 'active' : ''}`}
-          onClick={() => setActiveTab('analyze')}
-        >
-          <Camera size={24} />
-          <span>Analizar</span>
-        </button>
-        <button 
-          className={`btn nav-item ${activeTab === 'coach' ? 'active' : ''}`}
-          onClick={() => setActiveTab('coach')}
-        >
-          <MessageSquare size={24} />
-          <span>Coach</span>
-        </button>
-      </nav>
+    <div className="app">
+      <Header route={route} go={go} offlineState={offlineState} online={online} />
+      <main id="main" className="main">
+        <Page go={go} />
+      </main>
+      <BottomNav route={route} go={go} />
     </div>
   )
 }
 
-export default App
+export default function App() {
+  return (
+    <I18nProvider>
+      <AppStateProvider>
+        <Shell />
+      </AppStateProvider>
+    </I18nProvider>
+  )
+}

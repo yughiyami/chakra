@@ -1,0 +1,43 @@
+{
+  "as_of": "2025-12",
+  "retrieved": "2026-10-04",
+  "international": {
+    "source": "World Bank Commodity Price Data (Pink Sheet), Coffee Arabica, USD/kg, monthly",
+    "url": "https://www.worldbank.org/en/research/commodity-markets",
+    "license": "CC BY 4.0",
+    "series": [
+      {"month": "2025-07", "arabica_usd_kg": 7.18, "robusta_usd_kg": 3.69},
+      {"month": "2025-08", "arabica_usd_kg": 8.08, "robusta_usd_kg": 4.39},
+      {"month": "2025-09", "arabica_usd_kg": 8.83, "robusta_usd_kg": 4.66},
+      {"month": "2025-10", "arabica_usd_kg": 8.90, "robusta_usd_kg": 4.74},
+      {"month": "2025-11", "arabica_usd_kg": 9.05, "robusta_usd_kg": 4.74},
+      {"month": "2025-12", "arabica_usd_kg": 8.40, "robusta_usd_kg": 4.20}
+    ]
+  },
+  "farmgate_observed": {
+    "source": "FAOSTAT Producer Prices, Peru, Coffee green (tracks MIDAGRI pergamino farmgate price)",
+    "url": "https://www.fao.org/faostat/en/#data/PP",
+    "license": "CC BY 4.0",
+    "series": [
+      {"year": 2022, "pen_per_kg": 12.14, "usd_per_t": 3165},
+      {"year": 2023, "pen_per_kg": 9.89, "usd_per_t": 2642},
+      {"year": 2024, "pen_per_kg": 10.85, "usd_per_t": 2888},
+      {"month": "2025-01", "pen_per_kg": 16.26}
+    ]
+  },
+  "pass_through": {
+    "description": "Peru farmgate (FAOSTAT USD/t) divided by Pink Sheet Arabica annual average. Empirical, computed for this tool.",
+    "observed": {"2022": 0.56, "2023": 0.58, "2024": 0.51},
+    "band": [0.51, 0.58]
+  },
+  "fx": {
+    "pen_per_usd": 3.76,
+    "source": "Implied by FAOSTAT 2024 (10,850 PEN/t / 2,888 USD/t). Refreshed from open.er-api.com when online.",
+    "as_of": "2024"
+  },
+  "units": {
+    "quintal_kg": 46,
+    "note": "Pergamino is often sold per 46 kg quintal or 56-60 kg sacks; humidity changes the real weight."
+  },
+  "disclaimer": "Reference band, not a guaranteed price. Quality (cup score, humidity, yield factor) moves the real price. Ask your cooperative or the Junta Nacional del Cafe."
+}
