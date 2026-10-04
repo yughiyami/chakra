@@ -63,3 +63,42 @@ describe('summarizeModelCard', () => {
     expect(summarizeModelCard(null)).toBeNull()
   })
 })
+
+describe('summarizeModelCard (v2 flat metrics contract)', () => {
+  const v2 = {
+    size_mb: 6.2,
+    classes: ['healthy', 'leaf_miner', 'rust', 'brown_leaf_spot', 'cercospora'],
+    gates: { temperature: 2, qhat: 0.9, energy_threshold: -5, mahalanobis_threshold: 80, alpha: 0.1, n_calib: 201 },
+    metrics: {
+      bracol_test: { n: 203, top1_acc: 0.8, selective_acc: 0.95, answer_rate: 0.6, conformal_coverage: 0.9 },
+      saposoa_test: { n: 60, top1_acc: 0.7, selective_acc: 0.9, answer_rate: 0.5 },
+      ojo_de_gallo_unseen: { n: 60, abstention_rate: 0.85, auroc_vs_local_id: 0.91 },
+      far_ood: { n: 80, rejection_rate: 0.97 },
+      onnx_parity_max_logit_diff: 0.00002,
+    },
+  }
+
+  it('reads flat metric keys and the mahalanobis threshold', () => {
+    const s = summarizeModelCard(v2)
+    expect(s.version).toBe(2)
+    expect(s.gates.mahalanobis_threshold).toBe(80)
+    expect(s.selectiveAcc).toBe(0.95)
+    expect(s.saposoa.selectiveAcc).toBe(0.9)
+    expect(s.saposoa.n).toBe(60)
+    expect(s.ojoDeGallo.abstentionRate).toBe(0.85)
+    expect(s.ojoDeGallo.auroc).toBe(0.91)
+    expect(s.ojoDeGalloAbstention).toBe(0.85)
+    expect(s.farOodRejection).toBe(0.97)
+    expect(s.onnxParity).toBe(0.00002)
+    expect(s.sizeMb).toBe(6.2)
+  })
+
+  it('prefers the Peru (Saposoa) selective accuracy for the headline statement', () => {
+    expect(summarizeModelCard(v2).headline).toEqual({ acc: 0.9, n: 60, set: 'saposoa' })
+  })
+
+  it('falls back to BRACOL for the headline when Saposoa is missing', () => {
+    const card = { ...v2, metrics: { ...v2.metrics, saposoa_test: null } }
+    expect(summarizeModelCard(card).headline).toEqual({ acc: 0.95, n: 203, set: 'bracol' })
+  })
+})

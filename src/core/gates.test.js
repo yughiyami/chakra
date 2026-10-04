@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { softmax, logsumexp, energyScore, decide, CLASSES } from './gates.js'
+import { softmax, logsumexp, energyScore, decide, mahalanobisScore, CLASSES } from './gates.js'
 
 // Fixture gates (NOT the real model's): T=2, qhat=0.9 -> include class if p >= 0.1
 const GATES = { temperature: 2, qhat: 0.9, energy_threshold: -3, alpha: 0.1, n_calib: 100 }
@@ -76,5 +76,51 @@ describe('decide (mirror of Python gate logic)', () => {
     const classes = ['a', 'b', 'c', 'd', 'e']
     expect(decide([0, 10, 0, 0, 0], GATES, classes).label).toBe('b')
     expect(CLASSES).toEqual(['healthy', 'leaf_miner', 'rust', 'brown_leaf_spot', 'cercospora'])
+  })
+})
+
+describe('mahalanobis OOD score (v2 contract)', () => {
+  // 3-dim features projected to 2 PCA components, 2 classes, identity precision
+  const ood = {
+    feat_mean: [1, 1, 1],
+    components: [[1, 0, 0], [0, 1, 0]],
+    class_means: [[0, 0], [10, 10]],
+    precision: [[1, 0], [0, 1]],
+  }
+
+  it('projects features and returns the min squared distance over classes', () => {
+    // g = [2-1, 4-1] = [1, 3]; d0 = 1+9 = 10; d1 = 81+49 = 130
+    expect(mahalanobisScore([2, 4, 7], ood)).toBeCloseTo(10)
+  })
+
+  it('applies the precision matrix', () => {
+    const o = { ...ood, precision: [[2, 0], [0, 0.5]] }
+    // d0 = 2*1 + 0.5*9 = 6.5
+    expect(mahalanobisScore([2, 4, 7], o)).toBeCloseTo(6.5)
+  })
+
+  it('returns null for missing or mismatched inputs', () => {
+    expect(mahalanobisScore([1, 2], ood)).toBeNull()
+    expect(mahalanobisScore([1, 2, 3], null)).toBeNull()
+  })
+
+  it('abstains as unfamiliar when mahalanobis exceeds its threshold even if energy passes', () => {
+    const gates = { ...GATES, mahalanobis_threshold: 5 }
+    const r = decide([10, 0, 0, 0, 0], gates, CLASSES, { mahalanobis: 10 })
+    expect(r.status).toBe('abstain')
+    expect(r.reason).toBe('unfamiliar')
+    expect(r.mahalanobis).toBe(10)
+  })
+
+  it('answers when mahalanobis is under the threshold', () => {
+    const gates = { ...GATES, mahalanobis_threshold: 50 }
+    expect(decide([10, 0, 0, 0, 0], gates, CLASSES, { mahalanobis: 10 }).status).toBe('answer')
+  })
+
+  it('skips the mahalanobis gate when score or threshold is unavailable', () => {
+    expect(decide([10, 0, 0, 0, 0], GATES, CLASSES, { mahalanobis: 1e9 }).status).toBe('answer')
+    const r = decide([10, 0, 0, 0, 0], { ...GATES, mahalanobis_threshold: 5 }, CLASSES, { mahalanobis: null })
+    expect(r.status).toBe('answer')
+    expect(r.oodGate).toBe('skipped')
   })
 })

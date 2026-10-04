@@ -33,42 +33,75 @@ export function parseModelCard(text) {
 
 const num = (v) => (Number.isFinite(v) ? v : null)
 
-/** Flatten the fields the UI and decision gates need from the chosen variant. */
+/**
+ * Flatten the fields the UI and decision gates need. Supports:
+ *  v1: metrics[chosen] = {gates, size_mb, test, saposoa, far_ood}
+ *  v2: metrics = {bracol_test, saposoa_test, ojo_de_gallo_unseen, far_ood, onnx_parity_max_logit_diff}
+ */
 export function summarizeModelCard(card) {
   if (!card || typeof card !== 'object') return null
-  const chosen = card.chosen && card.metrics?.[card.chosen] ? card.chosen : null
-  const variant = chosen ? card.metrics[chosen] : {}
-  const gates = variant.gates ?? card.gates ?? null
-  const test = variant.test ?? {}
-  const sap = variant.saposoa ?? null
+  const m = card.metrics ?? {}
+  const isV2 = 'bracol_test' in m || 'saposoa_test' in m
+  let gates, test, sap, ogg, farOod, sizeMb, chosen
+  if (isV2) {
+    gates = card.gates ?? null
+    test = m.bracol_test ?? {}
+    sap = m.saposoa_test ?? null
+    ogg = m.ojo_de_gallo_unseen ?? null
+    farOod = m.far_ood ?? null
+    sizeMb = num(card.size_mb)
+    chosen = card.chosen ?? null
+  } else {
+    chosen = card.chosen && m[card.chosen] ? card.chosen : null
+    const variant = chosen ? m[chosen] : {}
+    gates = variant.gates ?? card.gates ?? null
+    test = variant.test ?? {}
+    sap = variant.saposoa ?? null
+    ogg = sap?.ojo_de_gallo ?? null
+    farOod = variant.far_ood ?? null
+    sizeMb = num(variant.size_mb) ?? num(card.size_mb)
+    chosen = chosen ?? card.chosen ?? null
+  }
   const alpha = num(gates?.alpha)
+  const saposoa = sap
+    ? {
+        n: num(sap.n),
+        top1: num(sap.top1_acc),
+        selectiveAcc: num(sap.selective_acc),
+        answerRate: num(sap.answer_rate),
+        ojoDeGalloAbstention: num(ogg?.abstention_rate),
+      }
+    : null
+  const ojoDeGallo = ogg ? { n: num(ogg.n), abstentionRate: num(ogg.abstention_rate), auroc: num(ogg.auroc_vs_local_id) } : null
+  const bracolAcc = num(test.selective_acc)
+  let headline = null
+  if (saposoa?.selectiveAcc != null) headline = { acc: saposoa.selectiveAcc, n: saposoa.n, set: 'saposoa' }
+  else if (bracolAcc != null) headline = { acc: bracolAcc, n: num(test.n), set: 'bracol' }
   return {
+    version: isV2 ? 2 : 1,
     model: card.model ?? null,
     format: card.format ?? null,
-    chosen: chosen ?? card.chosen ?? null,
+    chosen,
     classes: Array.isArray(card.classes) ? card.classes : null,
     gates,
-    sizeMb: num(variant.size_mb) ?? num(card.size_mb),
+    sizeMb,
     testN: num(test.n),
     top1: num(test.top1_acc),
-    selectiveAcc: num(test.selective_acc),
+    selectiveAcc: bracolAcc,
     answerRate: num(test.answer_rate),
     conformalCoverage: num(test.conformal_coverage),
     coverageTarget: alpha == null ? null : 1 - alpha,
     nCalib: num(gates?.n_calib),
-    saposoa: sap
-      ? {
-          n: num(sap.n),
-          top1: num(sap.top1_acc),
-          selectiveAcc: num(sap.selective_acc),
-          answerRate: num(sap.answer_rate),
-          ojoDeGalloAbstention: num(sap.ojo_de_gallo?.abstention_rate),
-        }
-      : null,
-    farOodRejection: num(variant.far_ood?.rejection_rate),
-    farOodN: num(variant.far_ood?.n),
+    saposoa,
+    ojoDeGallo,
+    ojoDeGalloAbstention: ojoDeGallo?.abstentionRate ?? null,
+    farOodRejection: num(farOod?.rejection_rate),
+    farOodN: num(farOod?.n),
+    onnxParity: num(m.onnx_parity_max_logit_diff),
+    headline,
     notCovered: Array.isArray(card.not_covered) ? card.not_covered : [],
     data: card.data ?? null,
     training: card.training ?? null,
+    localization: card.localization ?? card.data?.localization ?? null,
   }
 }
